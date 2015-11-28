@@ -1,4 +1,4 @@
-# Isomorphic js application
+# Isomorphic js application bootstrap
 
 - CycleJs
 - WebPack
