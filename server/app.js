@@ -16,9 +16,8 @@ function template(appVTree){
 }
 
 export default (responses) => {
-  const {DOM, History} = app(responses);
-  return {
-    DOM : DOM.take(1).map(template),
-    History : History
-  }
+  responses.History = responses.History.take(1)
+  const requests = app(responses)
+  requests.DOM = requests.DOM.take(1).map(template)
+  return requests
 }
