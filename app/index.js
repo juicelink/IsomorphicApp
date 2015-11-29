@@ -3,25 +3,35 @@ import {Observable} from 'rx'
 import switchPath from 'switch-path'
 import { filterLinks } from '@cycle/history'
 
-export default ({ DOM, History }) => {
-  const url$ = DOM
-    .select('a')
-    .events('click')
-    .filter(filterLinks)
-    .map(event => event.target.pathname)
-
-  const view$ = History
-    .map(({pathname}) => {
-      const {value} = switchPath(pathname, {
-            '/' : a({href: '/a'}, 'a link'),
-            '/a' : a({href: '/'}, 'root link'),
-            '*' : div('not found'),
-        })
-      return value
-    })
-
+const intent = ({DOM, History}) => {
   return {
-    DOM: view$,
-    History: url$
+    nextUrl$ : DOM
+          .select('a')
+          .events('click')
+          .filter(filterLinks)
+          .map(event => event.target.pathname),
+    url$ : History.map(({pathname}) => pathname)
   }
 }
+
+const model = ({nextUrl$, url$}) => {
+  return {
+    nextUrl$ : nextUrl$,
+    page$ : url$.map(pathname =>
+        switchPath(pathname, {
+              '/' : {href: '/a',content: 'a link'},
+              '/a' : {href: '/',content: 'root link'},
+              '*' : {href: '/',content: 'not found'},
+          }).value
+      )
+  }
+}
+
+const view = ({page$, nextUrl$}) => {
+  return {
+    History : nextUrl$,
+    DOM : page$.map(page => a({href: page.href}, page.content))
+  }
+}
+
+export default responses => view(model(intent(responses)))
