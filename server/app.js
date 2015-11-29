@@ -1,7 +1,6 @@
 import {body, div, head, html, script, title} from '@cycle/dom'
-
+import {jsBaseUrl, prod} from '../tools/env'
 import {main} from '../client/fileNames.json'
-import {assetsUrl} from '../tools/env'
 import app from '../app'
 
 function template(appVTree){

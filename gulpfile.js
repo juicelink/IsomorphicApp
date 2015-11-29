@@ -6,6 +6,7 @@ var webpack = require('webpack');
 var WebpackDevServer = require('webpack-dev-server');
 var configs = require('./webpack.configs');
 var env = require('./tools/env');
+var del = require('del');
 
 function onBuild(done){
 	return function(err, stats) {
@@ -17,25 +18,30 @@ function onBuild(done){
 	}
 }
 
-function build(config, done) {
+function build(config, toRemove, done) {
 	return function(done){
+        toRemove && del.sync(toRemove);
 		webpack(config).run(onBuild(done));
 	}	
 }
 
-function watch(config, done) {
-	return function(){
-		webpack(config).watch(100, onBuild(done));
+function watch(config, toRemove, done) {
+    var firstDone = false;
+	return function(cb){
+        toRemove && del.sync(toRemove);
+		webpack(config, cb).watch(100, onBuild(done));
 	}	
 }
 
-gulp.task('build-server', build(configs.server));
-gulp.task('build-client', build(configs.client));
+var serverFiles = path.join(env.buildPath,'*.*');
 
-gulp.task('watch-server', watch(configs.server, nodemon.restart));
+gulp.task('build-server', build(configs.server, serverFiles));
+gulp.task('build-client', build(configs.client, env.assetsPath));
+gulp.task('build', ['build-client'], build(configs.server, serverFiles));
 
-gulp.task('watch-client',  function() {
-  new WebpackDevServer(webpack(configs.client), configs.devServer)
+gulp.task('watch-client',  function(cb) {
+  del.sync(env.assetsPath);
+  new WebpackDevServer(webpack(configs.webpackDevServerClient, cb), configs.devServer)
   	.listen(env.webpackDevServerPort, 'localhost', function (err, result) {
 	    if(err) throw new gutil.PluginError('webpack-dev-server', err);
 	    else {
@@ -44,19 +50,18 @@ gulp.task('watch-client',  function() {
 	  });
 });
 
-gulp.task('build', ['build-client'], build(configs.server));
-gulp.task('watch', ['watch-server', 'watch-client']);
+gulp.task('watch', ['watch-client'], watch(configs.server, serverFiles, nodemon.restart));
 
 gulp.task('run', ['watch'], function() {
   nodemon({
     execMap: {
       js: 'node'
     },
-    script: path.join(__dirname, 'build/server.js'),
+    script: path.join(env.buildPath, env.serverEntryFile),
     ignore: ['*'],
     watch: ['foo/'],
-    ext: 'noop'
+    ext: 'noop',
   }).on('restart', function() {
-  	gutil.log('[nodemon]', 'server restarted!');
+    gutil.log('[nodemon]', 'server restarted!');
   });
 });

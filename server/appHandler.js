@@ -6,18 +6,14 @@ import { createLocation } from 'history'
 import {Observable} from 'rx'
 
 
-export default ({url}, res) => {
-    if (url === '/favicon.ico') {
-        res.writeHead(200, {'Content-Type': 'image/x-icon'})
-        res.end()
-        return
-    }
-    
-    res.setHeader('Content-Type', 'text/html; charset=UTF–8')
-
+export default ({url}, res, next) => {   
     const {sources} = run(app, {
         DOM: makeHTMLDriver(),
         History: makeServerHistoryDriver(createLocation(url))
     })
-    sources.DOM.map(html => `<!doctype html>${html}`).subscribe(html => res.end(html))
+    sources.DOM.map(html => `<!doctype html>${html}`)
+        .subscribe(html => {
+            res.send(html)
+            next()
+        })
 }

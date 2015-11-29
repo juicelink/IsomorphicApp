@@ -1,5 +1,4 @@
 var webpack = require('webpack');
-var path = require('path');
 var merge = require('./tools/merge');
 var env = require('./tools/env');
 var fs = require('fs');
@@ -24,19 +23,17 @@ var devConfig = {
   debug : true
 };
 
-var buildPath = path.join(__dirname, 'build');
-var assetsPath = path.join(buildPath, env.assetsDir);
-
 var serverConfig = {
   module: {
     loaders: [{
-          test: /\.json$/, loaders: ['json']}]
+          test: /\.json$/, loaders: ['json']
+      }]
   },
   entry: ['./server/index'],
   target: 'node',
   output: {
-    path: buildPath,
-    filename: 'server.js',
+    path: env.buildPath,
+    filename: env.serverEntryFile,
   },
   externals: nodeModules,
   node: {
@@ -50,23 +47,29 @@ var serverConfig = {
   ]
 }
 
-var devServerConfig = {
+var prodServerConfig = {
 };
 
 
 var clientConfig = {
   entry: ['./client/index.js'],
   output: {
-    path: assetsPath,
-    filename: '[hash].js',
-    publicPath: env.assetsUrl
+    path: env.assetsPath,
+    filename: 'client.js',
+    publicPath: env.assetsDir
   },
-  plugins : [new AssetsPlugin({prettyPrint: true, path: path.join(__dirname, 'client'), filename:'fileNames.json'})]
+  plugins : [new AssetsPlugin({prettyPrint: true, path: 'client', filename:'fileNames.json'})]
 };
 
-var devClientConfig = {
+var prodClientConfig = {
   output : {
-    filename: 'client.js',
+    filename: '[hash].js',
+  }
+}
+
+var webpackDevServerClientConfig = {
+  output : {
+    publicPath: env.webpackDevServerAssetsUrl
   },
   entry:
     [
@@ -79,19 +82,24 @@ var devClientConfig = {
   ]
 }
 
-if(!env.prod){
-  defaultConfig = merge(defaultConfig, devConfig);
-  clientConfig = merge(clientConfig, devClientConfig);
-  serverConfig = merge(serverConfig, devServerConfig);
+if(env.prod){
+  clientConfig = merge(clientConfig, prodClientConfig);
+  serverConfig = merge(serverConfig, prodServerConfig);
 }
+else{
+  defaultConfig = merge(defaultConfig, devConfig);
+}
+serverConfig = merge(defaultConfig, serverConfig);
+clientConfig = merge(defaultConfig, clientConfig);
 
 module.exports = {
-  server : merge(defaultConfig, serverConfig),
-  client : merge(defaultConfig, clientConfig),
+  server : serverConfig,
+  client : clientConfig,
+  webpackDevServerClient : merge(clientConfig, webpackDevServerClientConfig),
   devServer : {
     headers: { 'Access-Control-Allow-Origin': '*' },
-    contentBase: buildPath,
-    publicPath: 'http://localhost:3001/assets',
+    contentBase: env.buildPath,
+    publicPath: env.webpackDevServerAssetsUrl,
     hot: true,
     quiet: false,
     noInfo: true,

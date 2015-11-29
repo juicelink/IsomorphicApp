@@ -1,4 +1,4 @@
-import {a} from '@cycle/dom'
+import {a, div} from '@cycle/dom'
 import {Observable} from 'rx'
 import switchPath from 'switch-path'
 import { filterLinks } from '@cycle/history'
@@ -12,11 +12,10 @@ export default ({ DOM, History }) => {
 
   const view$ = History
     .map(({pathname}) => {
-      console.log(`location : ${pathname}`)
       const {value} = switchPath(pathname, {
             '/' : a({href: '/a'}, 'a link'),
             '/a' : a({href: '/'}, 'root link'),
-            '*' : a({href: '/'}, 'un root link'),
+            '*' : div('not found'),
         })
       return value
     })
