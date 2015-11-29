@@ -13,10 +13,4 @@ server.use(assetsDir, express.static(assetsPath))
 
 server.use(appHandler)
 
-server.use(function(err, req, res, next) {
-  console.log(JSON.stringify(err))
-  console.error(err.stack);
-  res.status(500).send('Something broke!');
-});
- 
 server.listen(3002)
