@@ -1,5 +1,5 @@
 {
   "main": {
-    "js": "http://localhost:3001/assets/client.js"
+    "js": "/assets/client.js"
   }
 }

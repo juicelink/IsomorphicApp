@@ -42,10 +42,14 @@ var serverConfig = {
   },
   plugins: [
     new webpack.IgnorePlugin(/\.(scss)$/),
+  ]
+}
+var devServerConfig = {
+  plugins: [
     new webpack.BannerPlugin('require("source-map-support").install();',
                              { raw: true, entryOnly: false })
   ]
-}
+};
 
 var prodServerConfig = {
 };
@@ -59,6 +63,9 @@ var clientConfig = {
     publicPath: env.assetsDir
   },
   plugins : [new AssetsPlugin({prettyPrint: true, path: 'client', filename:'fileNames.json'})]
+};
+
+var devClientConfig = {
 };
 
 var prodClientConfig = {
@@ -87,6 +94,8 @@ if(env.prod){
   serverConfig = merge(serverConfig, prodServerConfig);
 }
 else{
+  clientConfig = merge(clientConfig, devClientConfig);
+  serverConfig = merge(serverConfig, devServerConfig);
   defaultConfig = merge(defaultConfig, devConfig);
 }
 serverConfig = merge(defaultConfig, serverConfig);
